@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Food XI – Prototype</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+
+
+        /* ======== BULLE DE QUESTION DU COACH ======== */
+
+
+        .coach-bubble {
+            background: rgba(255,255,255,0.92);
+            color: #0a0e1c;
+            padding: 14px 18px;
+            border-radius: 20px;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+            font-size: 14px;
+            font-weight: 600;
+            animation: bubblePop 0.35s ease;
+            position: relative;
+        }
+
+        /* petit triangle de bulle */
+        .coach-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            right: 22px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 0 solid transparent;
+            border-top: 12px solid rgba(255,255,255,0.92);
+        }
+
+        /* animation bulle */
+        @keyframes bubblePop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+
+        /* ======== COACH FLOATING GAME STYLE ======== */
+
+        #coach-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: auto;
+            display: flex;
+            flex-direction: column; /* Bulle au-dessus, kiwi en dessous */
+            align-items: flex-end;
+            gap: 8px;
+            z-index: 99999;
+        }
+
+
+
+        #coach-bubble {
+            background: white;
+            color: black !important;
+            padding: 14px 18px;
+            border-radius: 20px;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 240px;
+            max-width: 260px;
+            position: relative;
+        }
+
+        /* Pointe vers le bas → vers le kiwi */
+        #coach-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -12px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-top: 12px solid white;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+
+        #coach-avatar {
+            width: 110px;
+            animation: coachIdle 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px rgba(0,255,140,0.5));
+        }
+
+
+
+        @keyframes coachIdle {
+            0%   { transform: translateY(0); }
+            50%  { transform: translateY(-6px) rotate(1deg); }
+            100% { transform: translateY(0); }
+        }
+
+
+        @keyframes dialogPop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+
+        /* LISTE ALIMENTS — SCROLL VERTICAL */
+        .product-list-scroll {
+            max-height: 520px;      /* hauteur visible */
+            overflow-y: auto;       /* scroll vertical */
+            padding-right: 6px;     /* évite que la scrollbar couvre le contenu */
+        }
+
+        /* Scrollbar stylée */
+        .product-list-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .product-list-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .product-list-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #60a5fa, #22d3ee);
+            border-radius: 10px;
+        }
+
+
+
+        /* --- BACKGROUND PRINCIPAL (glow waves améliorées) --- */
+
+        #theme-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 9999;
+            transition: transform 0.25s ease, background 0.25s ease;
+        }
+
+        #theme-btn:hover {
+            transform: scale(1.12) rotate(4deg);
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ============================================================
+           🌙 MODE SOMBRE — OVERRIDES COMPLETS
+           (Doit absolument être à la fin du <style>)
+           ============================================================ */
+
+        /* Fond galaxie sombre */
+        body.dark {
+            background: radial-gradient(
+                    circle at 30% 20%,
+                    #131621 0%,
+                    #10131d 40%,
+                    #0b0e16 80%
+            );
+            background-size: 250% 250%;
+        }
+
+        /* Glow waves assombries */
+        body.dark::before {
+            background:
+                    radial-gradient(circle, rgba(90,110,180,0.20), transparent 70%),
+                    radial-gradient(circle, rgba(120,80,160,0.18), transparent 70%),
+                    radial-gradient(circle, rgba(70,100,170,0.15), transparent 70%);
+            opacity: 0.55;
+            filter: blur(100px);
+        }
+
+        /* Glass en mode sombre */
+        body.dark .glass {
+            background: rgba(15, 20, 35, 0.60);
+            border: 1px solid rgba(120, 150, 200, 0.25);
+        }
+
+        /* Texte plus clair */
+        body.dark * {
+            color: #e6ebf7 !important;
+        }
+
+        /* Icônes slider / scroll */
+        body.dark .scroll-x::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        body.dark .scroll-x::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #8892ff, #6bd0ff);
+            border-color: rgba(255,255,255,0.10);
+        }
+
+        /* Particules légèrement atténuées */
+        body.dark .particle {
+            background: rgba(255,255,255,0.70);
+        }
+
+        /* Étoiles filantes moins agressives */
+        body.dark .shooting-star {
+            opacity: 0.55;
+        }
+
+
+        body {
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            /* Dégradé plus profond et plus dynamique */
+            background: radial-gradient(
+                    circle at 30% 20%,
+                    #3b4f78 0%,
+                    #2d3c5e 40%,
+                    #1d2945 80%
+            );
+
+            background-size: 250% 250%;
+            animation: nebulaShift 16s ease-in-out infinite;
+        }
+
+        /* Animation du fond (plus fluide et dynamique) */
+        @keyframes nebulaShift {
+            0% { background-position: 20% 20%; }
+            50% { background-position: 80% 80%; }
+            100% { background-position: 20% 20%; }
+        }
+
+        /* --- Glow Waves (plus profond, plus doux, plus dynamique) --- */
+        body::before {
+            content: "";
+            position: absolute;
+            inset: -250px;
+            background:
+                    radial-gradient(circle, rgba(140,180,255,0.30), transparent 70%),
+                    radial-gradient(circle, rgba(180,140,255,0.25), transparent 70%),
+                    radial-gradient(circle, rgba(120,160,255,0.20), transparent 70%);
+            background-size: 50% 50%, 70% 70%, 90% 90%;
+            animation: glowWaves 14s infinite ease-in-out alternate;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* Ondes plus visibles + mouvement plus vivant */
+        @keyframes glowWaves {
+            0% { transform: translate(-10%, -10%) scale(1); opacity: 0.45; }
+            50% { transform: translate(12%, 12%) scale(1.3); opacity: 0.75; }
+            100% { transform: translate(-8%, 10%) scale(1.1); opacity: 0.5; }
+        }
+
+        /* --- ÉTOILES FILANTES (plus visibles + plus rapides) --- */
+        .shooting-star {
+            position: fixed;
+            top: -250px;
+            width: 3px;
+            height: 180px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95), transparent);
+            border-radius: 50%;
+            filter: blur(1.5px);
+            pointer-events: none;
+            animation: shootingStarMove 3.8s linear infinite;
+            opacity: 0.85;
+        }
+
+        .shooting-star:nth-child(1) { left: 12%; animation-delay: 0s; }
+        .shooting-star:nth-child(2) { left: 42%; animation-delay: 1s; }
+        .shooting-star:nth-child(3) { left: 68%; animation-delay: 2.2s; }
+
+        /* Étoiles filantes plus rapides et avec une belle traînée */
+        @keyframes shootingStarMove {
+            0% { transform: translate(-400px, 0) rotate(45deg); opacity: 0; }
+            10% { opacity: 1; }
+            50% { transform: translate(350px, 350px) rotate(45deg); opacity: 0.9; }
+            100% { transform: translate(800px, 800px) rotate(45deg); opacity: 0; }
+        }
+
+        /* --- PARTICULES SCINTILLANTES (plus subtiles mais plus nombreuses) --- */
+        .particle {
+            position: fixed;
+            width: 7px;
+            height: 7px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 50%;
+            filter: blur(2.5px);
+            animation: sparkle 2.8s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+
+        /* Sparkle plus dynamique et plus doux */
+        @keyframes sparkle {
+            0% { transform: scale(0.7); opacity: 0.3; }
+            50% { transform: scale(1.5); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        /* Positions améliorées */
+        .particle:nth-child(1) { top: 15%; left: 12%; animation-delay: .0s; }
+        .particle:nth-child(2) { top: 42%; left: 78%; animation-delay: .8s; }
+        .particle:nth-child(3) { top: 64%; left: 28%; animation-delay: 1.6s; }
+        .particle:nth-child(4) { top: 78%; left: 58%; animation-delay: .4s; }
+        .particle:nth-child(5) { top: 52%; left: 48%; animation-delay: 2.1s; }
+
+
+
+        /* Animation du logo kiwi */
+        .logo-kiwi {
+            animation: kiwiPulse 2.5s infinite ease-in-out;
+        }
+        @keyframes kiwiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+
+        /* Hover : rotation légère + zoom */
+        .logo-kiwi:hover {
+            transform: scale(1.08) rotate(3deg);
+        }
+
+        /* Rebond léger */
+        @keyframes kiwiBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* Glow vert cartoon */
+        @keyframes kiwiGlow {
+            0%, 100% { box-shadow: 0 0 18px #4ade80; }
+            50% { box-shadow: 0 0 30px #22c55e; }
+        }
+
+
+        /* BARRE HORIZONTALE LARGE + SCROLL ESTHÉTIQUE */
+        .scroll-x {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.3rem;
+            padding: 0.5rem 0 1.2rem 0;
+            width: 100%;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scroll-x::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .scroll-x::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            margin: 0 10px;
+        }
+
+        .scroll-x::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #60a5fa, #22d3ee);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .scroll-x::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+        }
+
+        /* Chaque image devient un carré arrondi */
+        /* Carrés légèrement plus grands + arrondi plus subtil */
+        /* Carrés plus grands pour éviter le crop */
+        .tile-card {
+            width: 320px;       /* avant 240 */
+            height: 320px;      /* avant 280 → plus haut pour ne plus couper */
+            border-radius: 1.2rem;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+            transition: 0.25s ease-out;
+        }
+
+        /* L'image s'adapte sans couper trop */
+        .tile-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;        /* IMPORTANT : évite le crop violent */
+            background: #0f172a;        /* léger fond sombre derrière les zones transparentes */
+            border-radius: inherit;
+            transition: 0.35s ease-out;
+        }
+
+        /* Hover (flou + assombrissement + zoom léger) */
+        .tile-card:hover img {
+            transform: scale(1.07);
+            filter: blur(3px) brightness(0.65);
+        }
+
+        /* Overlay texte */
+        .tile-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(3px);
+            transition: opacity 0.3s;
+        }
+
+        .tile-card:hover .tile-overlay {
+            opacity: 1;
+        }
+
+        body.dark #coach-dialog {
+            color: #0a0e1c !important;   /* override même en dark mode */
+        }
+
+        /* Empêche le coach d'être affecté par la couleur du mode sombre */
+        body.dark #coach-bubble,
+        body.dark #coach-bubble * {
+            color: #0a0e1c !important;     /* noir */
+            background: white !important;  /* bulle blanche */
+        }
+
+        body.dark #coach-container {
+            filter: brightness(1.1); /* meilleur contraste */
+        }
+
+        /* Force le texte en noir dans les champs de saisie */
+        input, textarea {
+            color: #0a0e1c !important;   /* noir */
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #0a0e1c !important;   /* placeholder noir */
+        }
+
+        /* Fond clair pour les champs */
+        input, textarea {
+            background: rgba(255,255,255,0.9) !important;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.25s ease-out; }
+
+        @keyframes fade {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .animate-fade { animation: fade 0.25s ease-out; }
+
+        @keyframes bossPop {
+            0% { transform: scale(0.4) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.1) rotate(4deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .animate-pop-boss {
+            animation: bossPop 0.45s cubic-bezier(.17,.67,.45,1.32);
+        }
+
+    </style>
+
+
+</head>
+
+<body class="text-slate-50 min-h-screen flex justify-center pt-10">
+<div class="w-full max-w-6xl mx-auto px-8 py-10">
+
+    <!-- HEADER -->
+    <header class="text-center mb-5">
+        <div id="theme-btn">🌙</div>
+
+        <img src="/static/Pictures/ChatGPT Image 15 nov. 2025, 22 h 04 min 14 s.png"
+             class="w-24 h-24 mx-auto object-cover logo-kiwi"
+             alt="Kiwi Logo">
+
+        <h1 class="text-3xl font-extrabold tracking-tight mt-4">NutriTrack</h1>
+        <p class="text-slate-300 text-sm mt-1">
+            Track smart! Play smart!
+        </p>
+    </header>
+
+    <!-- Étoiles filantes -->
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+
+    <!-- Particules scintillantes -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <!-- HOME -->
+    <section id="screen-home" class="space-y-3">
+        <div class="scroll-x">
+
+            <!-- SCANNER -->
+            <div onclick="showScreen('scan')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-15%2023.56.59%20-%20A%20slightly%20more%20mature%20and%20serious%20anthropomorphic%20potato%20character%20in%20manga%20style,%20dressed%20as%20a%20detective.%20The%20potato%20has%20refined,%20thoughtful%20anime%20e.webp" alt="Scanner">
+                <div class="tile-overlay">NutriSearch</div>
+            </div>
+
+            <!-- ALIMENTS -->
+            <div onclick="showScreen('search')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-15%2023.58.31%20-%20A%20manga-style%20anthropomorphic%20celery%20character%20shopping%20in%20a%20supermarket.%20The%20celery%20has%20a%20tall,%20leafy%20head,%20wears%20glasses,%20a%20cozy%20scarf,%20and%20green%20sn.webp" alt="Aliments">
+                <div class="tile-overlay">Food list</div>
+            </div>
+
+            <div onclick="showScreen('team')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-16%2000.08.45%20-%20A%202D%20manga-style%20illustration%20featuring%20only%20anthropomorphic%20food%20ingredients%20preparing%20a%20pizza.%20The%20characters%20include%20a%20tomato,%20a%20green%20olive,%20a%20che.webp" alt="Équipe">
+                <div class="tile-overlay">Match&Meal</div>
+            </div>
+
+            <!-- HISTOIRE -->
+            <div onclick="showScreen('story')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-15%2023.42.54%20-%20A%20flat,%202D%20cartoon-style%20illustration%20of%20a%20cute%20anthropomorphic%20umeboshi%20(pickled%20plum)%20sleeping%20with%20a%20book%20on%20her%20head.%20The%20umeboshi%20has%20a%20soft,%20wri.webp" alt="Histoire">
+                <div class="tile-overlay">Story</div>
+            </div>
+
+            <!-- CLASSEMENT -->
+            <div onclick="showScreen('leaderboard')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-16%2000.32.39%20-%20A%20cute%20anthropomorphic%20carrot%20character%20in%20a%20clear%202D%20manga%20style,%20with%20bold%20outlines%20and%20vibrant%20colors.%20The%20carrot%20has%20big%20expressive%20manga%20eyes,%20a%20.webp" alt="Classement">
+                <div class="tile-overlay">Leaderboard</div>
+            </div>
+
+            <!-- AJOUTER -->
+            <div onclick="showScreen('contribute')" class="tile-card">
+                <img src="/static/Pictures/DALL·E%202025-11-16%2000.05.26%20-%20A%202D%20manga-style%20scene%20inside%20a%20clean%20and%20organized%20refrigerator.%20A%20group%20of%20anthropomorphic%20food%20items—a%20milk%20carton,%20loaf%20of%20bread,%20banana,%20apple,%20a.webp" alt="Ajouter">
+                <div class="tile-overlay">New Product</div>
+            </div>
+
+        </div>
+    </section>
+
+
+
+
+    <!-- SCAN -->
+    <section id="screen-scan" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+        <h2 class="font-semibold mb-2">Scanner / saisir un code-barres</h2>
+        <p class="text-xs text-slate-300 mb-1">Simule le scan en entrant un code-barres (ex: 3017620422004).</p>
+        <div class="flex gap-2 mb-3">
+            <input id="scan-barcode" class="flex-1 rounded-xl px-3 py-2 text-sm text-slate-900" placeholder="Code-barres">
+            <button onclick="searchScan()" class="glass text-sm px-3 rounded-xl">OK</button>
+        </div>
+        <div id="scan-result" class="text-sm"></div>
+    </section>
+
+
+    <!-- SEARCH -->
+    <section id="screen-search" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+        <h2 class="font-semibold mb-2">Aliments suggérés</h2>
+
+        <!-- LISTE SCROLL VERTICAL -->
+        <div id="product-list" class="product-list-scroll space-y-2 text-sm"></div>
+    </section>
+
+
+    <!-- JOUR DE MATCH -->
+    <section id="screen-team" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+
+        <h2 class="font-semibold mb-1 text-lg">Jour de match – Compose ta stratégie</h2>
+        <p class="text-xs text-slate-300 mb-4">
+            Sélectionne les bons aliments pour chaque moment clé : avant, pendant et après ton match.
+        </p>
+
+        <!-- PRE-MATCH -->
+        <h3 class="font-semibold text-slate-200">⚡ Pré-match (énergie durable)</h3>
+        <div class="grid grid-cols-3 gap-2 mb-4" id="team-pre"></div>
+
+        <!-- MID-MATCH -->
+        <h3 class="font-semibold text-slate-200">🔥 Pendant le match (carburant rapide)</h3>
+        <div class="grid grid-cols-3 gap-2 mb-4" id="team-mid"></div>
+
+        <!-- POST-MATCH -->
+        <h3 class="font-semibold text-slate-200">💧 Après match (récupération)</h3>
+        <div class="grid grid-cols-3 gap-2 mb-4" id="team-post"></div>
+
+        <!-- SCORES -->
+        <div class="mb-3 text-xs glass rounded-xl p-3">
+            <div>Score Santé : <span id="nutri-avg">0</span>/100</div>
+            <div>Score Environnement : <span id="eco-avg">0</span>/100</div>
+            <div class="mt-1 font-semibold text-sm">Score Global : <span id="final-score">0</span>/100</div>
+        </div>
+
+        <button onclick="computeTeam()"
+                class="glass w-full py-2 rounded-xl text-sm font-semibold">
+            ⚙️ Calculer les scores de la journée
+        </button>
+    </section>
+
+
+    <!-- STORY -->
+    <section id="screen-story" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+        <h2 class="font-semibold mb-2">Mode histoire</h2>
+        <p class="text-xs text-slate-300 mb-2">Affronte des boss alimentaires avec ton équipe.</p>
+        <div id="boss-list" class="space-y-2 text-sm"></div>
+    </section>
+
+
+    <!-- LEADERBOARD -->
+    <section id="screen-leaderboard" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+        <h2 class="font-semibold mb-2">Classement mondial</h2>
+        <div id="leaderboard-list" class="space-y-2 text-sm"></div>
+    </section>
+
+
+    <!-- CONTRIBUTE -->
+    <section id="screen-contribute" class="hidden glass mt-4 rounded-3xl p-4 space-y-3">
+        <button class="text-sm mb-2 text-slate-300" onclick="backHome()">← Retour</button>
+        <h2 class="font-semibold mb-2">Ajouter un produit</h2>
+
+        <div class="space-y-2 text-xs">
+            <input id="c-name" class="w-full rounded-xl px-3 py-2 text-slate-900" placeholder="Nom du produit *">
+            <input id="c-brand" class="w-full rounded-xl px-3 py-2 text-slate-900" placeholder="Marque (optionnel)">
+            <input id="c-barcode" class="w-full rounded-xl px-3 py-2 text-slate-900" placeholder="Code-barres *">
+            <input id="c-nutri" class="w-full rounded-xl px-3 py-2 text-slate-900" placeholder="Nutri-Score (A-E) *">
+            <input id="c-eco" class="w-full rounded-xl px-3 py-2 text-slate-900" placeholder="Éco-Score (A+-F) *">
+        </div>
+
+        <button onclick="contribute()" class="glass w-full py-2 rounded-xl text-sm font-semibold mt-3">
+            💾 Envoyer
+        </button>
+
+        <div id="contrib-result" class="mt-2 text-xs"></div>
+    </section>
+
+</div>
+
+<!-- COACH FLOATANT -->
+<div id="coach-container">
+    <div id="coach-bubble" class="coach-bubble"></div>
+    <img id="coach-avatar" src="/static/Pictures/ChatGPT Image 15 nov. 2025, 22 h 04 min 14 s.png" alt="coach">
+
+</div>
+
+
+<!-- ÉCRAN RÉPONSE DU COACH -->
+<section id="screen-coach-answer" class="hidden glass mt-4 rounded-3xl p-6 space-y-4">
+    <button class="text-sm mb-2 text-slate-300" onclick="showScreen('team')">← Retour</button>
+
+    <h2 class="font-semibold text-lg">Réponse du Coach</h2>
+
+    <div id="coach-final-answer" class="text-sm leading-relaxed"></div>
+
+    <button id="coach-read-btn"
+            class="mt-3 px-4 py-2 rounded-lg bg-indigo-500/80 text-sm">
+        🔊 Écouter la réponse
+    </button>
+</section>
+
+<!-- MODAL POUR SELECTION PRE/MID/POST -->
+<div id="phase-modal"
+     class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[99999] animate-fade">
+    <div class="bg-[#0f1b3d] text-white rounded-3xl p-6 w-80 shadow-2xl scale-95 animate-pop"
+         style="border: 2px solid #1e2a5a;">
+
+
+        <div class="flex items-center gap-3 mb-3">
+            <img src="/static/Pictures/ChatGPT%20Image%2015%20nov.%202025,%2022%20h%2004%20min%2014%20s.png" class="w-12 h-12">
+            <h3 class="font-bold text-lg text-slate-900 dark:text-slate-100">
+                Choisis ton moment !
+            </h3>
+        </div>
+
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+            Quand veux-tu consommer cet aliment ?
+        </p>
+
+        <div class="space-y-3">
+            <button class="modal-choice w-full py-2 rounded-xl bg-blue-500 text-white hover:bg-blue-600 transition" data-choice="1">
+                ⚡ Pré-match
+            </button>
+
+            <button class="modal-choice w-full py-2 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition" data-choice="2">
+                🔥 Pendant match
+            </button>
+
+            <button class="modal-choice w-full py-2 rounded-xl bg-green-500 text-white hover:bg-green-600 transition" data-choice="3">
+                💧 Après match
+            </button>
+        </div>
+
+        <button id="phase-modal-cancel"
+                class="w-full mt-4 py-2 rounded-xl bg-slate-300 dark:bg-slate-700 text-black dark:text-white hover:bg-slate-400 dark:hover:bg-slate-600 transition">
+            Annuler
+        </button>
+    </div>
+</div>
+
+<!-- POPUP BOSS RESULT -->
+<div id="boss-popup"
+     class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-[99999] animate-fade">
+
+    <div id="boss-popup-box"
+         class="rounded-3xl p-6 w-80 shadow-2xl bg-white dark:bg-slate-900
+                animate-pop-boss">
+
+        <img id="boss-popup-icon" src="/static/Pictures/ChatGPT%20Image%2016%20nov.%202025,%2017%20h%2051%20min%2018%20s.png" class="w-20 h-20 mx-auto mb-3">
+
+        <h3 id="boss-popup-title"
+            class="text-center font-extrabold text-xl mb-2">
+        </h3>
+
+        <p id="boss-popup-message"
+           class="text-center text-sm text-slate-700 dark:text-slate-300 mb-4">
+        </p>
+
+        <button id="boss-popup-close"
+                class="w-full py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
+            OK !
+        </button>
+    </div>
+</div>
+
+<script>
+    function launchConfetti() {
+        const duration = 1400;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            const colors = ["#ff4757", "#ffa502", "#1e90ff", "#2ed573", "#eccc68"];
+            confetti({
+                particleCount: 6,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors
+            });
+            confetti({
+                particleCount: 6,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors
+            });
+
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+    }
+</script>
+
+<!-- Confetti lib -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.browser.min.js"></script>
+
+
+<script src="/static/app.js"></script>
+</body>
+
+</html>
